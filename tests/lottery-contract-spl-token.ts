@@ -123,9 +123,9 @@ it("Lottery for solana", async () => {
   console.log('Lottery account', lotteryMasterAccount);
 
 
-  const [lotteryPda, lotteryBump] = findProgramAddressSync([Buffer.from('INIT_LOTTERY'), Buffer.from([lotteryMasterAccount.lotteryCount])], program.programId);
+  const [lotteryPda, lotteryBump] = findProgramAddressSync([Buffer.from('INIT_LOTTERY'), Buffer.from([lotteryMasterAccount.lotteryCount]), mint.toBuffer()], program.programId);
     
-  const [lotteryTokenAccountPda, lotteryTokenAccountBump] = findProgramAddressSync([Buffer.from('LOTTERY_TOKEN_ACCOUNT'), Buffer.from([lotteryMasterAccount.lotteryCount])], program.programId);
+  const [lotteryTokenAccountPda, lotteryTokenAccountBump] = findProgramAddressSync([Buffer.from('LOTTERY_TOKEN_ACCOUNT'), Buffer.from([lotteryMasterAccount.lotteryCount]), mint.toBuffer()], program.programId);
   
 
   console.log(`Lottery PDA ${lotteryPda}, ${lotteryBump}` );
@@ -173,6 +173,7 @@ it("Lottery for solana", async () => {
   const txPickWinner = await program.methods.pickWinner(0).accounts({
     root: root.publicKey,
     lotteryState: lotteryPda,
+    tokenMint: mint,
   }).signers([root]).rpc();
 
   try{    
@@ -181,6 +182,7 @@ it("Lottery for solana", async () => {
       playerTokenAccount: player0ATA.address,
       lotteryState: lotteryPda,
       lotteryTokenAccount: lotteryTokenAccountPda,
+      tokenMint: mint,
     }).signers([player0]).rpc();
     console.log('Claim 0', txClaim0);
   }
@@ -198,6 +200,7 @@ it("Lottery for solana", async () => {
     playerTokenAccount: player1ATA.address,
     lotteryState: lotteryPda,
     lotteryTokenAccount: lotteryTokenAccountPda,
+    tokenMint: mint,
   }).signers([player1]).rpc();
     console.log('Claim 1', txClaim1);
   }
@@ -215,6 +218,7 @@ it("Lottery for solana", async () => {
       playerTokenAccount: player2ATA.address,
       lotteryState: lotteryPda,
       lotteryTokenAccount: lotteryTokenAccountPda,
+      tokenMint: mint,
     }).signers([player2]).rpc();
     console.log('Claim 2', txClaim2);
   }

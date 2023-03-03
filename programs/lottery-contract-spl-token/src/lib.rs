@@ -56,14 +56,14 @@ pub mod lottery_contract_spl_token {
         msg!("Initialize lottery");
         let lottery_state = &mut ctx.accounts.lottery_state;
         let lottery_master = &mut ctx.accounts.lottery_master;
-        let lottery_associated_account = &mut ctx.accounts.lottery_token_account;
+        let lottery_token_account = &mut ctx.accounts.lottery_token_account;
 
         lottery_state.amount = 0;
         lottery_state.is_starting = true;
         lottery_state.player = vec![];
         lottery_state.claimed = false;
         lottery_state.id = lottery_master.lottery_count;
-        lottery_state.mint = lottery_associated_account.mint;
+        lottery_state.mint = lottery_token_account.mint;
 
         lottery_master.lottery_count += 1;
 
@@ -116,6 +116,7 @@ pub mod lottery_contract_spl_token {
       let lottery_state = &mut ctx.accounts.lottery_state;
       let lottery_token_account = &mut ctx.accounts.lottery_token_account;
       let player_token_account = &mut ctx.accounts.player_token_account;
+      let token_mint = &ctx.accounts.token_mint.key().clone();
 
       let player  = &ctx.accounts.player;
 
@@ -125,9 +126,10 @@ pub mod lottery_contract_spl_token {
 
       let lottery_id = lottery_state.id;
 
-      let seed: &[&[u8]] = &[
+      let seed = &[
             LOTTERY_SEED, 
             &[_lottery_index],
+            token_mint.as_ref(),
             &[_bump]
           ];
       
@@ -136,7 +138,7 @@ pub mod lottery_contract_spl_token {
           &lottery_token_account.to_account_info(), 
           &player_token_account, 
           lottery_state.amount, 
-          &[&seed]
+          &[seed]
         )
         .expect("transfer fail");
 

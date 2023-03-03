@@ -48,7 +48,7 @@ pub struct InitLotteryContext<'info> {
 
     #[account(
         init,
-        seeds = [LOTTERY_SEED, &[lottery_master.lottery_count]],
+        seeds = [LOTTERY_SEED, &[lottery_master.lottery_count], token_mint.key().as_ref()],
         bump,
         payer = root,
         space = 1024,
@@ -57,7 +57,7 @@ pub struct InitLotteryContext<'info> {
 
     #[account(
         init,
-        seeds = [LOTTERY_ACCOUNT_SEED, &[lottery_master.lottery_count]],
+        seeds = [LOTTERY_ACCOUNT_SEED, &[lottery_master.lottery_count], token_mint.key().as_ref()],
         bump,
         payer = root,
         token::mint = token_mint,
@@ -89,7 +89,7 @@ pub struct AddMoneyContext<'info> {
 
     #[account(
         mut,
-        seeds = [LOTTERY_SEED, &[_lottery_index].as_ref()],
+        seeds = [LOTTERY_SEED, &[_lottery_index].as_ref(), token_mint.key().as_ref()],
         bump
     )]
     pub lottery_state: Box<Account<'info, Lottery>>,
@@ -97,8 +97,10 @@ pub struct AddMoneyContext<'info> {
     /// CHECK: Signer for lottery account
     #[account(
         mut,
-        seeds = [LOTTERY_ACCOUNT_SEED, &[_lottery_index]],
+        seeds = [LOTTERY_ACCOUNT_SEED, &[_lottery_index], token_mint.key().as_ref()],
         bump,
+        constraint=(lottery_token_account.owner == lottery_state.key()),
+        constraint=(lottery_token_account.mint == token_mint.key()),
     )]
     pub lottery_token_account: Box<Account<'info, TokenAccount>>,
 
@@ -122,10 +124,14 @@ pub struct PickWinnerContext<'info> {
 
     #[account(
         mut,
-        seeds = [LOTTERY_SEED, &[_lottery_index].as_ref()],
+        seeds = [LOTTERY_SEED, &[_lottery_index].as_ref(), token_mint.key().as_ref()],
         bump
     )]
     pub lottery_state: Box<Account<'info, Lottery>>,
+
+    /// CHECK: Token mint like (ERC20)
+    #[account(mut)]
+    pub token_mint: Account<'info, TokenMint>,
 
     pub system_program: Program<'info, System>
 }
@@ -146,7 +152,7 @@ pub struct ClaimContext<'info> {
 
     #[account(
         mut,
-        seeds = [LOTTERY_SEED, &[_lottery_index].as_ref()],
+        seeds = [LOTTERY_SEED, &[_lottery_index].as_ref(), token_mint.key().as_ref()],
         bump
     )]
     pub lottery_state: Box<Account<'info, Lottery>>,
@@ -154,10 +160,16 @@ pub struct ClaimContext<'info> {
     /// CHECK: Signer for lottery account
     #[account(
         mut,
-        seeds = [LOTTERY_ACCOUNT_SEED, &[_lottery_index]],
+        seeds = [LOTTERY_ACCOUNT_SEED, &[_lottery_index], token_mint.key().as_ref()],
         bump,
+        constraint=lottery_token_account.owner==lottery_state.key(),
+        constraint=(lottery_token_account.mint == token_mint.key())
     )]
     pub lottery_token_account: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: Token mint like (ERC20)
+    #[account(mut)]
+    pub token_mint: Account<'info, TokenMint>,
 
     pub system_program: Program<'info, System>,
     
